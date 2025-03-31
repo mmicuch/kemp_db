@@ -1,14 +1,15 @@
 const express = require('express');
-const { engine } = require('express-handlebars');
+const exphbs = require('express-handlebars');
+require('./helpers');  // Upravený import
 const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
-// Import helpers
-const helpers = require('./helpers');
-
 // Import database
 const { testConnection } = require('./config/db');
+
+// Import models for helper functions
+const Activity = require('./models/activity');
 
 // Import routes
 const indexRoutes = require('./routes/index');
@@ -23,8 +24,19 @@ const app = express();
 testConnection();
 
 // Set up view engine with helpers
-app.engine('handlebars', engine({
-  helpers: helpers
+app.engine('handlebars', exphbs.engine({
+  helpers: {
+    subtract: (a, b) => a - b,
+    countRegistrations: async (id) => {
+      try {
+        return await Activity.countRegistrations(id);
+      } catch (error) {
+        console.error(`Error counting registrations in helper: ${error}`);
+        return 0;
+      }
+    },
+    json: (context) => JSON.stringify(context)
+  }
 }));
 app.set('view engine', 'handlebars');
 app.set('views', './views');

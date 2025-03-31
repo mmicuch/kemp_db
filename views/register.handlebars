@@ -57,18 +57,23 @@
             {{#each allergies}}
             <div>
                 <label>
-                    <input type="checkbox" name="alergie" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
+                    <input type="checkbox" name="alergia_{{id}}" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
                 </label>
             </div>
             {{/each}}
+            <div>
+                <label>
+                    <input type="checkbox" id="ine_alergie_check"> Iné alergie
+                </label>
+            </div>
         </div>
         
-        <div>
-            <label for="ine_alergie">Iné alergie (uveďte):</label>
+        <div id="ine_alergie_container" style="display: none;">
+            <label for="ine_alergie">Špecifikujte iné alergie:</label>
             <textarea name="ine_alergie" id="ine_alergie"></textarea>
         </div>
     </fieldset>
-    
+
     <fieldset>
         <legend>Aktivity</legend>
         
@@ -137,7 +142,7 @@
             updateAccommodationOptions(this.value);
         });
     });
-    
+
     function updateAccommodationOptions(gender) {
         const accommodationList = document.getElementById('accommodationList');
         accommodationList.innerHTML = '';
@@ -164,20 +169,26 @@
             accommodationList.appendChild(div);
         });
     }
-    
-    // Make sure all form interactions work properly
+
+    // Script pre zobrazenie/skrytie poľa pre iné alergie
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize form when loaded
-        const genderRadios = document.querySelectorAll('input[name="pohlavie"]');
-        if (genderRadios.length > 0 && genderRadios[0].checked) {
-            updateAccommodationOptions(genderRadios[0].value);
+        const ineAlergieCheck = document.getElementById('ine_alergie_check');
+        const ineAlergieContainer = document.getElementById('ine_alergie_container');
+        
+        if (ineAlergieCheck && ineAlergieContainer) {
+            ineAlergieCheck.addEventListener('change', function() {
+                ineAlergieContainer.style.display = this.checked ? 'block' : 'none';
+                
+                // Ak je odškrtnuté, vyčistíme textové pole
+                if (!this.checked) {
+                    document.getElementById('ine_alergie').value = '';
+                }
+            });
         }
         
-        // Form validation before submission
+        // Upravme validáciu formulára
         document.querySelector('form').addEventListener('submit', function(event) {
-            // Add custom validation if needed
-            
-            // Example: Check if at least one activity is selected for each day
+            // Kontrola aktivít pre každý deň
             const stredaSelected = document.querySelector('input[name="aktivity_streda"]:checked');
             const stvrtokSelected = document.querySelector('input[name="aktivity_stvrtok"]:checked');
             const piatokSelected = document.querySelector('input[name="aktivity_piatok"]:checked');
@@ -188,7 +199,7 @@
                 return false;
             }
             
-            // Check if accommodation is selected
+            // Kontrola výberu ubytovania
             const ubytovanieSelected = document.querySelector('input[name="ubytovanie"]:checked');
             if (!ubytovanieSelected) {
                 event.preventDefault();
@@ -196,7 +207,17 @@
                 return false;
             }
             
-            // Check GDPR consent
+            // Kontrola pre "iné alergie"
+            if (ineAlergieCheck && ineAlergieCheck.checked) {
+                const ineAlergieText = document.getElementById('ine_alergie').value.trim();
+                if (ineAlergieText === '') {
+                    event.preventDefault();
+                    alert('Ak ste vybrali "Iné alergie", prosím špecifikujte ich.');
+                    return false;
+                }
+            }
+            
+            // Kontrola súhlasu s GDPR
             const gdprChecked = document.querySelector('input[name="gdpr"]:checked');
             if (!gdprChecked) {
                 event.preventDefault();
@@ -204,5 +225,11 @@
                 return false;
             }
         });
+        
+        // Initialize accommodation options when page loads
+        const genderRadios = document.querySelectorAll('input[name="pohlavie"]');
+        if (genderRadios.length > 0 && genderRadios[0].checked) {
+            updateAccommodationOptions(genderRadios[0].value);
+        }
     });
 </script>

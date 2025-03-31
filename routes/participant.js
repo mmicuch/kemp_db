@@ -42,8 +42,7 @@ router.get('/register', async (req, res) => {
     res.status(500).send('Nastala chyba pri načítaní registračného formulára');
   }
 });
-
-// Process registration
+// Update the post handler in routes/participant.js
 router.post('/register', async (req, res) => {
   try {
     // Convert form data for activities
@@ -53,10 +52,17 @@ router.post('/register', async (req, res) => {
     if (req.body.aktivity_piatok) aktivity.push(req.body.aktivity_piatok);
     req.body.aktivity = aktivity;
     
-    // Convert allergies to array if it's a single value
-    if (req.body.alergie && !Array.isArray(req.body.alergie)) {
-      req.body.alergie = [req.body.alergie];
+    // Process individual allergies
+    const alergie = [];
+    // Iterate through all form fields to find allergies
+    for (const [key, value] of Object.entries(req.body)) {
+      if (key.startsWith('alergia_') && value) {
+        // Extract allergy ID from the field name (alergia_1 -> 1)
+        const alergiaId = key.split('_')[1];
+        alergie.push(alergiaId);
+      }
     }
+    req.body.alergie = alergie;
     
     // Set participant type
     req.body.ucastnik = 'taborujuci';
