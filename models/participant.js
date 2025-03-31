@@ -11,9 +11,13 @@ class Participant {
   }
 
   static async create(participant) {
+    const connection = await pool.getConnection();
+    
     try {
-      // Insert into os_udaje table
-      const [result] = await pool.query(
+      await connection.beginTransaction();
+      
+      // Insert participant
+      const [result] = await connection.query(
         'INSERT INTO os_udaje (meno, priezvisko, datum_narodenia, pohlavie, mladez, poznamka, mail, ucastnik, GDPR) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           participant.meno,
@@ -29,44 +33,24 @@ class Participant {
       );
       
       const participantId = result.insertId;
-      
-      // Insert allergies
+
+      // Insert allergies one by one to avoid lock timeout
       if (participant.alergie && participant.alergie.length > 0) {
-        const allergiesValues = participant.alergie.map(allergieId => [participantId, allergieId]);
-        await pool.query(
-          'INSERT INTO os_udaje_alergie (os_udaje_id, alergie_id) VALUES ?',
-          [allergiesValues]
-        );
+        for (const alergiaId of participant.alergie) {
+          await connection.query(
+            'INSERT INTO os_udaje_alergie (os_udaje_id, alergie_id) VALUES (?, ?)',
+            [participantId, parseInt(alergiaId, 10)]
+          );
+        }
       }
-      
-      // Insert custom allergy note if provided
-      if (participant.ine_alergie && participant.ine_alergie.trim() !== '') {
-        await pool.query(
-          'UPDATE os_udaje SET poznamka = CONCAT(IFNULL(poznamka, ""), "Iné alergie: ", ?) WHERE id = ?',
-          [participant.ine_alergie, participantId]
-        );
-      }
-      
-      // Insert activities
-      if (participant.aktivity && participant.aktivity.length > 0) {
-        const activitiesValues = participant.aktivity.map(activityId => [participantId, activityId]);
-        await pool.query(
-          'INSERT INTO os_udaje_aktivity (os_udaje_id, aktivita_id) VALUES ?',
-          [activitiesValues]
-        );
-      }
-      
-      // Insert accommodation
-      if (participant.ubytovanie) {
-        await pool.query(
-          'INSERT INTO os_udaje_ubytovanie (os_udaje_id, ubytovanie_id) VALUES (?, ?)',
-          [participantId, participant.ubytovanie]
-        );
-      }
-      
+
+      await connection.commit();
       return participantId;
     } catch (error) {
+      await connection.rollback();
       throw error;
+    } finally {
+      connection.release();
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "registration-system",
+  "name": "kemp_db",
   "version": "1.0.0",
   "description": "Registration system for activities and accommodations",
   "main": "app.js",

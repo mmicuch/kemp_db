@@ -15,6 +15,12 @@ router.get('/register', async (req, res) => {
     const thursdayActivities = await Activity.getByDay('stvrtok');
     const fridayActivities = await Activity.getByDay('piatok');
     
+    // Pre-calculate available places for each activity
+    for (const activity of [...wednesdayActivities, ...thursdayActivities, ...fridayActivities]) {
+      const registrations = await Activity.countRegistrations(activity.id);
+      activity.availablePlaces = activity.kapacita - registrations;
+    }
+    
     // Get available accommodations for leaders
     const accommodations = await Accommodation.getAvailableForLeader();
     
@@ -44,10 +50,11 @@ router.post('/register', async (req, res) => {
       req.body.alergie = [req.body.alergie];
     }
     
-    // Convert activities to array if it's a single value
-    if (req.body.aktivity && !Array.isArray(req.body.aktivity)) {
-      req.body.aktivity = [req.body.aktivity];
-    }
+    // Combine activities from different days into a single array
+    req.body.aktivity = [];
+    if (req.body.aktivity_streda) req.body.aktivity.push(req.body.aktivity_streda);
+    if (req.body.aktivity_stvrtok) req.body.aktivity.push(req.body.aktivity_stvrtok);
+    if (req.body.aktivity_piatok) req.body.aktivity.push(req.body.aktivity_piatok);
     
     // Set participant type to leader
     req.body.ucastnik = 'veduci';

@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
+// Import helpers
+const helpers = require('./helpers');
+
 // Import database
 const { testConnection } = require('./config/db');
 
@@ -19,8 +22,10 @@ const app = express();
 // Test database connection
 testConnection();
 
-// Set up view engine
-app.engine('handlebars', engine());
+// Set up view engine with helpers
+app.engine('handlebars', engine({
+  helpers: helpers
+}));
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 

@@ -57,7 +57,7 @@
             {{#each allergies}}
             <div>
                 <label>
-                    <input type="checkbox" name="alergie[]" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
+                    <input type="checkbox" name="alergie" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
                 </label>
             </div>
             {{/each}}
@@ -65,7 +65,7 @@
         
         <div>
             <label for="ine_alergie">Iné alergie (uveďte):</label>
-            <textarea id="ine_alergie" name="ine_alergie"></textarea>
+            <textarea name="ine_alergie" id="ine_alergie"></textarea>
         </div>
     </fieldset>
     
@@ -79,7 +79,7 @@
                 <div>
                     <label>
                         <input type="radio" name="aktivity_streda" value="{{id}}"> {{nazov}} 
-                        <span class="capacity">(Voľné miesta: {{subtract kapacita (countRegistrations id)}})</span>
+                        <span class="capacity">(Voľné miesta: {{availablePlaces}})</span>
                     </label>
                 </div>
                 {{/each}}
@@ -91,7 +91,7 @@
                 <div>
                     <label>
                         <input type="radio" name="aktivity_stvrtok" value="{{id}}"> {{nazov}} 
-                        <span class="capacity">(Voľné miesta: {{subtract kapacita (countRegistrations id)}})</span>
+                        <span class="capacity">(Voľné miesta: {{availablePlaces}})</span>
                     </label>
                 </div>
                 {{/each}}
@@ -103,7 +103,7 @@
                 <div>
                     <label>
                         <input type="radio" name="aktivity_piatok" value="{{id}}"> {{nazov}} 
-                        <span class="capacity">(Voľné miesta: {{subtract kapacita (countRegistrations id)}})</span>
+                        <span class="capacity">(Voľné miesta: {{availablePlaces}})</span>
                     </label>
                 </div>
                 {{/each}}

@@ -72,6 +72,48 @@
         </div>
     </fieldset>
     
+    <fieldset>
+        <legend>Aktivity</legend>
+        
+        <div class="activities-container">
+            <div class="activity-day">
+                <h3>Streda</h3>
+                {{#each wednesdayActivities}}
+                <div>
+                    <label>
+                        <input type="radio" name="aktivity_streda" value="{{id}}"> {{nazov}} 
+                        <span class="capacity">(Voľné miesta: {{availablePlaces}})</span>
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+            
+            <div class="activity-day">
+                <h3>Štvrtok</h3>
+                {{#each thursdayActivities}}
+                <div>
+                    <label>
+                        <input type="radio" name="aktivity_stvrtok" value="{{id}}"> {{nazov}} 
+                        <span class="capacity">(Voľné miesta: {{availablePlaces}})</span>
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+            
+            <div class="activity-day">
+                <h3>Piatok</h3>
+                {{#each fridayActivities}}
+                <div>
+                    <label>
+                        <input type="radio" name="aktivity_piatok" value="{{id}}"> {{nazov}} 
+                        <span class="capacity">(Voľné miesta: {{availablePlaces}})</span>
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </fieldset>
+    
     <fieldset class="accommodation-section">
         <legend>Ubytovanie</legend>
         
@@ -138,6 +180,17 @@
         
         // Form validation
         document.querySelector('form').addEventListener('submit', function(event) {
+            // Check if activities are selected for each day
+            const stredaSelected = document.querySelector('input[name="aktivity_streda"]:checked');
+            const stvrtokSelected = document.querySelector('input[name="aktivity_stvrtok"]:checked');
+            const piatokSelected = document.querySelector('input[name="aktivity_piatok"]:checked');
+            
+            if (!stredaSelected || !stvrtokSelected || !piatokSelected) {
+                event.preventDefault();
+                alert('Prosím, vyberte aktivitu pre každý deň.');
+                return false;
+            }
+            
             // Check if accommodation is selected
             const ubytovanieSelected = document.querySelector('input[name="ubytovanie"]:checked');
             if (!ubytovanieSelected) {

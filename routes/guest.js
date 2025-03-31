@@ -15,6 +15,12 @@ router.get('/register', async (req, res) => {
     const thursdayActivities = await Activity.getByDay('stvrtok');
     const fridayActivities = await Activity.getByDay('piatok');
     
+    // Pre-calculate available places for each activity
+    for (const activity of [...wednesdayActivities, ...thursdayActivities, ...fridayActivities]) {
+      const registrations = await Activity.countRegistrations(activity.id);
+      activity.availablePlaces = activity.kapacita - registrations;
+    }
+    
     // Get all accommodations since we don't know gender yet
     const accommodations = await Accommodation.getAvailable();
     
@@ -40,10 +46,11 @@ router.post('/register', async (req, res) => {
       req.body.alergie = [req.body.alergie];
     }
     
-    // Convert activities to array if it's a single value
-    if (req.body.aktivity && !Array.isArray(req.body.aktivity)) {
-      req.body.aktivity = [req.body.aktivity];
-    }
+    // Combine activities from different days into a single array (if selected)
+    req.body.aktivity = [];
+    if (req.body.aktivity_streda) req.body.aktivity.push(req.body.aktivity_streda);
+    if (req.body.aktivity_stvrtok) req.body.aktivity.push(req.body.aktivity_stvrtok);
+    if (req.body.aktivity_piatok) req.body.aktivity.push(req.body.aktivity_piatok);
     
     // Set participant type to guest
     req.body.ucastnik = 'host';
