@@ -45,10 +45,17 @@ router.get('/register', async (req, res) => {
 // Process leader registration
 router.post('/register', async (req, res) => {
   try {
-    // Convert allergies to array if it's a single value
-    if (req.body.alergie && !Array.isArray(req.body.alergie)) {
-      req.body.alergie = [req.body.alergie];
+    // Process individual allergies
+    const alergie = [];
+    // Iterate through all form fields to find allergies
+    for (const [key, value] of Object.entries(req.body)) {
+      if (key.startsWith('alergia_') && value) {
+        // Extract allergy ID from the field name (alergia_1 -> 1)
+        const alergiaId = key.split('_')[1];
+        alergie.push(alergiaId);
+      }
     }
+    req.body.alergie = alergie;
     
     // Combine activities from different days into a single array
     req.body.aktivity = [];

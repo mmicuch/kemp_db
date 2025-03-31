@@ -60,15 +60,20 @@
             {{#each allergies}}
             <div>
                 <label>
-                    <input type="checkbox" name="alergie[]" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
+                    <input type="checkbox" name="alergia_{{id}}" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
                 </label>
             </div>
             {{/each}}
+            <div>
+                <label>
+                    <input type="checkbox" id="ine_alergie_check"> Iné alergie
+                </label>
+            </div>
         </div>
-        
-        <div>
-            <label for="ine_alergie">Iné alergie (uveďte):</label>
-            <textarea id="ine_alergie" name="ine_alergie"></textarea>
+
+        <div id="ine_alergie_container" style="display: none;">
+            <label for="ine_alergie">Špecifikujte iné alergie:</label>
+            <textarea name="ine_alergie" id="ine_alergie"></textarea>
         </div>
     </fieldset>
     
