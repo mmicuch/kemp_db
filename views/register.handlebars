@@ -1,0 +1,208 @@
+<h2>Registrácia účastníka</h2>
+
+<form action="/participant/register" method="POST">
+    <fieldset>
+        <legend>Osobné údaje</legend>
+        
+        <div>
+            <label for="meno">Meno:</label>
+            <input type="text" id="meno" name="meno" required>
+        </div>
+        
+        <div>
+            <label for="priezvisko">Priezvisko:</label>
+            <input type="text" id="priezvisko" name="priezvisko" required>
+        </div>
+        
+        <div>
+            <label for="datum_narodenia">Dátum narodenia:</label>
+            <input type="date" id="datum_narodenia" name="datum_narodenia" required>
+        </div>
+        
+        <div>
+            <label>Pohlavie:</label>
+            <label>
+                <input type="radio" name="pohlavie" value="M" required> Muž
+            </label>
+            <label>
+                <input type="radio" name="pohlavie" value="F"> Žena
+            </label>
+        </div>
+        
+        <div>
+            <label for="mail">Email:</label>
+            <input type="email" id="mail" name="mail" required>
+        </div>
+        
+        <div>
+            <label for="mladez">Mládež:</label>
+            <select id="mladez" name="mladez">
+                <option value="">--Vyber mládež--</option>
+                {{#each youthGroups}}
+                <option value="{{nazov}}">{{nazov}}</option>
+                {{/each}}
+            </select>
+        </div>
+        
+        <div>
+            <label for="poznamka">Poznámka:</label>
+            <textarea id="poznamka" name="poznamka"></textarea>
+        </div>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Alergie</legend>
+        
+        <div class="allergies-list">
+            {{#each allergies}}
+            <div>
+                <label>
+                    <input type="checkbox" name="alergie[]" value="{{id}}"> {{nazov}} <span class="allergie-description">{{popis}}</span>
+                </label>
+            </div>
+            {{/each}}
+        </div>
+        
+        <div>
+            <label for="ine_alergie">Iné alergie (uveďte):</label>
+            <textarea id="ine_alergie" name="ine_alergie"></textarea>
+        </div>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Aktivity</legend>
+        
+        <div class="activities-container">
+            <div class="activity-day">
+                <h3>Streda</h3>
+                {{#each wednesdayActivities}}
+                <div>
+                    <label>
+                        <input type="radio" name="aktivity_streda" value="{{id}}"> {{nazov}} 
+                        <span class="capacity">(Voľné miesta: {{subtract kapacita (countRegistrations id)}})</span>
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+            
+            <div class="activity-day">
+                <h3>Štvrtok</h3>
+                {{#each thursdayActivities}}
+                <div>
+                    <label>
+                        <input type="radio" name="aktivity_stvrtok" value="{{id}}"> {{nazov}} 
+                        <span class="capacity">(Voľné miesta: {{subtract kapacita (countRegistrations id)}})</span>
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+            
+            <div class="activity-day">
+                <h3>Piatok</h3>
+                {{#each fridayActivities}}
+                <div>
+                    <label>
+                        <input type="radio" name="aktivity_piatok" value="{{id}}"> {{nazov}} 
+                        <span class="capacity">(Voľné miesta: {{subtract kapacita (countRegistrations id)}})</span>
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </fieldset>
+    
+    <fieldset class="accommodation-section">
+        <legend>Ubytovanie</legend>
+        
+        <div class="accommodation-list" id="accommodationList">
+            <p>Vyberte pohlavie pre zobrazenie dostupných možností ubytovania</p>
+        </div>
+    </fieldset>
+    
+    <div>
+        <label>
+            <input type="checkbox" name="gdpr" value="1" required> Súhlasím so spracovaním osobných údajov
+        </label>
+    </div>
+    
+    <div>
+        <button type="submit">Registrovať</button>
+    </div>
+</form>
+
+<script>
+    // Handle accommodation based on gender selection
+    document.querySelectorAll('input[name="pohlavie"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateAccommodationOptions(this.value);
+        });
+    });
+    
+    function updateAccommodationOptions(gender) {
+        const accommodationList = document.getElementById('accommodationList');
+        accommodationList.innerHTML = '';
+        
+        const accommodations = {{{json accommodations}}};
+        const filteredAccommodations = accommodations.filter(acc => 
+            acc.typ === (gender === 'M' ? 'muz' : 'zena') || acc.typ === 'spolocne'
+        );
+        
+        if (filteredAccommodations.length === 0) {
+            accommodationList.innerHTML = '<p>Žiadne dostupné ubytovanie pre vybrané pohlavie</p>';
+            return;
+        }
+        
+        filteredAccommodations.forEach(acc => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label>
+                    <input type="radio" name="ubytovanie" value="${acc.id}" required> 
+                    ${acc.izba} 
+                    <span class="capacity">(Typ: ${acc.typ}, Voľné miesta: ${acc.kapacita - acc.obsadene})</span>
+                </label>
+            `;
+            accommodationList.appendChild(div);
+        });
+    }
+    
+    // Make sure all form interactions work properly
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize form when loaded
+        const genderRadios = document.querySelectorAll('input[name="pohlavie"]');
+        if (genderRadios.length > 0 && genderRadios[0].checked) {
+            updateAccommodationOptions(genderRadios[0].value);
+        }
+        
+        // Form validation before submission
+        document.querySelector('form').addEventListener('submit', function(event) {
+            // Add custom validation if needed
+            
+            // Example: Check if at least one activity is selected for each day
+            const stredaSelected = document.querySelector('input[name="aktivity_streda"]:checked');
+            const stvrtokSelected = document.querySelector('input[name="aktivity_stvrtok"]:checked');
+            const piatokSelected = document.querySelector('input[name="aktivity_piatok"]:checked');
+            
+            if (!stredaSelected || !stvrtokSelected || !piatokSelected) {
+                event.preventDefault();
+                alert('Prosím, vyberte aktivitu pre každý deň.');
+                return false;
+            }
+            
+            // Check if accommodation is selected
+            const ubytovanieSelected = document.querySelector('input[name="ubytovanie"]:checked');
+            if (!ubytovanieSelected) {
+                event.preventDefault();
+                alert('Prosím, vyberte ubytovanie.');
+                return false;
+            }
+            
+            // Check GDPR consent
+            const gdprChecked = document.querySelector('input[name="gdpr"]:checked');
+            if (!gdprChecked) {
+                event.preventDefault();
+                alert('Pre registráciu je potrebný súhlas so spracovaním osobných údajov.');
+                return false;
+            }
+        });
+    });
+</script>
