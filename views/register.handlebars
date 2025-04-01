@@ -41,7 +41,13 @@
                 {{#each youthGroups}}
                 <option value="{{nazov}}">{{nazov}}</option>
                 {{/each}}
+                <option value="ina">Iná mládež</option>
             </select>
+        </div>
+
+        <div id="ina_mladez_container" style="display: none;">
+            <label for="ina_mladez">Názov mládeže:</label>
+            <input type="text" id="ina_mladez" name="ina_mladez">
         </div>
         
         <div>
@@ -230,6 +236,59 @@
         const genderRadios = document.querySelectorAll('input[name="pohlavie"]');
         if (genderRadios.length > 0 && genderRadios[0].checked) {
             updateAccommodationOptions(genderRadios[0].value);
+        }
+    });
+
+    // Zobrazenie/skrytie poľa pre inú mládež
+    document.addEventListener('DOMContentLoaded', function() {
+        const mladezSelect = document.getElementById('mladez');
+        const inaMladezContainer = document.getElementById('ina_mladez_container');
+        
+        if (mladezSelect && inaMladezContainer) {
+            mladezSelect.addEventListener('change', function() {
+                inaMladezContainer.style.display = this.value === 'ina' ? 'block' : 'none';
+                
+                // Ak nie je zvolená "Iná mládež", vyčistíme pole
+                if (this.value !== 'ina') {
+                    document.getElementById('ina_mladez').value = '';
+                }
+            });
+        }
+        
+        // Načítame aktuálne počty registrácií pre aktivity
+        fetch('/participant/api/activity-counts')
+            .then(response => response.json())
+            .then(counts => {
+                // Aktualizujeme zobrazenie voľných miest
+                document.querySelectorAll('input[type="radio"][name^="aktivity_"]').forEach(radio => {
+                    const activityId = radio.value;
+                    const capacitySpan = radio.parentElement.querySelector('.capacity');
+                    const activity = findActivity(activityId);
+                    
+                    if (activity && capacitySpan) {
+                        const registrations = counts[activityId] || 0;
+                        const availablePlaces = activity.kapacita - registrations;
+                        capacitySpan.textContent = `(Voľné miesta: ${availablePlaces})`;
+                        
+                        // Ak nie sú voľné miesta, zablokujeme možnosť
+                        if (availablePlaces <= 0) {
+                            radio.disabled = true;
+                            capacitySpan.classList.add('full');
+                            radio.parentElement.classList.add('disabled');
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Chyba pri načítaní počtov aktivít:', error));
+        
+        // Pomocná funkcia na nájdenie aktivity podľa ID
+        function findActivity(id) {
+            const allActivities = [
+                ...{{{json wednesdayActivities}}},
+                ...{{{json thursdayActivities}}},
+                ...{{{json fridayActivities}}}
+            ];
+            return allActivities.find(a => a.id == id);
         }
     });
 </script>

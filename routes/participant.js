@@ -42,9 +42,30 @@ router.get('/register', async (req, res) => {
     res.status(500).send('Nastala chyba pri načítaní registračného formulára');
   }
 });
+
 // Update the post handler in routes/participant.js
 router.post('/register', async (req, res) => {
   try {
+    // Spracujeme vlastnú mládež
+    if (req.body.mladez === 'ina' && req.body.ina_mladez) {
+      // Pridáme novú mládež do databázy
+      try {
+        // Najprv skontrolujeme, či už mládež neexistuje
+        const [existingYouth] = await pool.query('SELECT * FROM mladez WHERE nazov = ?', [req.body.ina_mladez]);
+        
+        if (existingYouth.length === 0) {
+          // Pridáme novú mládež
+          await pool.query('INSERT INTO mladez (nazov) VALUES (?)', [req.body.ina_mladez]);
+        }
+        
+        // Nastavíme mladez na zadaný názov
+        req.body.mladez = req.body.ina_mladez;
+      } catch (youthError) {
+        console.error('Chyba pri vytváraní novej mládeže:', youthError);
+        // Pokračujeme v registrácii aj keď sa nepodarí vytvoriť novú mládež
+      }
+    }
+    
     // Convert form data for activities
     const aktivity = [];
     if (req.body.aktivity_streda) aktivity.push(req.body.aktivity_streda);
@@ -84,8 +105,10 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// API endpoint pre získanie počtu registrácií pre aktivity
 router.get('/api/activity-counts', async (req, res) => {
   try {
+    // Získame počty registrácií pre všetky aktivity
     const [rows] = await pool.query(`
       SELECT aktivita_id, COUNT(*) as count 
       FROM os_udaje_aktivity 
@@ -102,6 +125,28 @@ router.get('/api/activity-counts', async (req, res) => {
   } catch (error) {
     console.error('Error fetching activity counts:', error);
     res.status(500).json({ error: 'Failed to fetch activity counts' });
+  }
+});
+
+// API endpoint pre získanie kapacity aktivít
+router.get('/api/activities', async (req, res) => {
+  try {
+    const activities = await Activity.getAll();
+    res.json(activities);
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+    res.status(500).json({ error: 'Failed to fetch activities' });
+  }
+});
+
+// API endpoint pre získanie aktivít podľa dňa
+router.get('/api/activities/:day', async (req, res) => {
+  try {
+    const activities = await Activity.getByDay(req.params.day);
+    res.json(activities);
+  } catch (error) {
+    console.error(`Error fetching activities for day ${req.params.day}:`, error);
+    res.status(500).json({ error: 'Failed to fetch activities for the specified day' });
   }
 });
 
