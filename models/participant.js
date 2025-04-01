@@ -30,7 +30,8 @@ class Participant {
           participant.poznamka,
           participant.mail,
           participant.ucastnik || 'taborujuci',
-          participant.gdpr ? 1 : 0
+          participant.gdpr ? 1 : 0,
+          participant.novy ? 1 : 0
         ]
       );
       

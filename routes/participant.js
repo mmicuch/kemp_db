@@ -65,6 +65,8 @@ router.post('/register', async (req, res) => {
         // Pokračujeme v registrácii aj keď sa nepodarí vytvoriť novú mládež
       }
     }
+
+    req.body.novy = req.body.novy ? 1 : 0;
     
     // Convert form data for activities
     const aktivity = [];
